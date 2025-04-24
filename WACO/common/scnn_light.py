@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import MinkowskiEngine as ME
 
-# Part 1: The Simplified SCNN Module (Jiangshan's core task)
 class SimplifiedSCNN(nn.Module):
     """
     A simplified Sparsity CNN module based on the original ResNetBase,
