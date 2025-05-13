@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-import MinkowskiEngine as ME
 import os
 
 def from_csr(filename) :
@@ -18,16 +17,13 @@ def from_csr(filename) :
   return num_row, num_col, nnz, coo
 
 def collate_fn(list_data):
-    coords_batch, features_batch, labels_batch = ME.utils.sparse_collate(
-        [d["coordinates"] for d in list_data],
-        [d["features"] for d in list_data],
-        [d["label"] for d in list_data],
-    )
-
     mtxnames_batch = [d["mtxname"] for d in list_data]
-    shapes_batch = torch.stack([d["shape"] for d in list_data]) 
+    coords_batch = [d["coordinates"] for d in list_data]
+    features_batch = [d["features"] for d in list_data]
+    labels_batch = [d["label"] for d in list_data]
+    shapes_batch = torch.stack([d["shape"] for d in list_data])
 
-    return mtxnames_batch, coords_batch, features_batch, shapes_batch
+    return mtxnames_batch, coords_batch, features_batch, labels_batch, shapes_batch
 
 class SparseMatrixDataset(torch.utils.data.Dataset):
     def __init__(self, filename):

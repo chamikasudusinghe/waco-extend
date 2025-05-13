@@ -11,12 +11,13 @@ import sys
 from model import ResNet14
 from Loader.superschedule_loader import SuperScheduleDataset
 from Loader.sparsematrix_loader import SparseMatrixDataset, collate_fn
-import MinkowskiEngine as ME
+#import MinkowskiEngine as ME
 
 if __name__ == "__main__":
     f = open("trainlog.txt",'a')
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
+    print(device)
     
     net = ResNet14(in_channels=1, out_channels=1, D=2) # D : 2D Tensor
     net = net.to(device)
@@ -31,12 +32,12 @@ if __name__ == "__main__":
     SparseMatrix_Dataset_Valid = SparseMatrixDataset('./TrainingData/validation.txt')
     valid_SparseMatrix = torch.utils.data.DataLoader(SparseMatrix_Dataset_Valid, batch_size=1, shuffle=True, num_workers=0, collate_fn=collate_fn)
 
-    for epoch in range(80) :
+    for epoch in range(10) :
       # Train
       net.train()
       train_loss = 0
       train_loss_cnt = 0 
-      for sparse_batchidx, (mtx_names, coords, features, shapes) in enumerate(train_SparseMatrix) :
+      for sparse_batchidx, (mtx_names, coords, features, labels, shapes) in enumerate(train_SparseMatrix):
         torch.cuda.empty_cache()
         torch.save(net.state_dict(), "resnet.pth")
        
@@ -44,12 +45,12 @@ if __name__ == "__main__":
         train_SuperSchedule = torch.utils.data.DataLoader(SuperSchedule_Dataset, batch_size=32, shuffle=True, num_workers=0)
         shapes = shapes.to(device)
         
-        SparseMatrix = ME.SparseTensor(coordinates=coords, features=features, device=device)
+        #SparseMatrix = ME.SparseTensor(coordinates=coords, features=features, device=device)
         for schedule_batchidx, (schedule, runtime) in enumerate(train_SuperSchedule) :
           if (schedule.shape[0] < 2) : break
           schedule, runtime = schedule.to(device), runtime.to(device)
           optimizer.zero_grad()
-          query_feature = net.embed_sparse_matrix(SparseMatrix, shapes)
+          query_feature = net.embed_sparse_matrix_shape(shapes)
           query_feature = query_feature.expand((schedule.shape[0], query_feature.shape[1]))
           predict = net.forward_after_query(query_feature, schedule)
 
@@ -78,17 +79,17 @@ if __name__ == "__main__":
       with torch.no_grad() :
         valid_loss = 0
         valid_loss_cnt = 0
-        for sparse_batchidx, (mtx_names, coords, features, shapes) in enumerate(valid_SparseMatrix) :
+        for sparse_batchidx, (mtx_names, coords, features, labels, shapes) in enumerate(train_SparseMatrix):
           torch.cuda.empty_cache()
           SuperSchedule_Dataset = SuperScheduleDataset(mtx_names[0]) # Get rid of runtime<1000
           valid_SuperSchedule = torch.utils.data.DataLoader(SuperSchedule_Dataset, batch_size=32, shuffle=True, num_workers=0)
           shapes = shapes.to(device)
           
-          SparseMatrix = ME.SparseTensor(coordinates=coords, features=features, device=device)
+          #SparseMatrix = ME.SparseTensor(coordinates=coords, features=features, device=device)
           for schedule_batchidx, (schedule, runtime) in enumerate(valid_SuperSchedule) :
             if (schedule.shape[0] < 6) : break
             schedule, runtime = schedule.to(device), runtime.to(device)
-            query_feature = net.embed_sparse_matrix(SparseMatrix, shapes)
+            query_feature = net.embed_sparse_matrix_shape(shapes)
             query_feature = query_feature.expand((schedule.shape[0], query_feature.shape[1]))
             predict = net.forward_after_query(query_feature, schedule)
 
