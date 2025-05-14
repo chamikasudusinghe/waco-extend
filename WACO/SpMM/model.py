@@ -96,6 +96,14 @@ class ResNetBase(nn.Module):
             nn.Linear(128,128),
         )
         
+        self.decoder = nn.Sequential(
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, 3),  # Reconstructs [num_rows, num_cols, nnz]
+        )
+        
         # Final Layer
         self.final = nn.Sequential(
             nn.Linear(128+128, 128),
@@ -186,6 +194,11 @@ class ResNetBase(nn.Module):
         xy = torch.cat((x,y), dim=1)
         xy = self.final(xy)
         return xy
+    
+    def forward_autoencoder(self, x1: ME.SparseTensor, x2):
+        embedding = self.embed_sparse_matrix(x1, x2)  # shape: (B, 128)
+        reconstructed_shape = self.decoder(embedding)  # shape: (B, 3)
+        return embedding, reconstructed_shape
 
 
 class ResNet14(ResNetBase):
