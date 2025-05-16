@@ -56,9 +56,18 @@ def process_matrix(args):
     }
 
 class SparseMatrixDataset(torch.utils.data.Dataset):
-    def __init__(self, filename, resolution=32, num_workers=None):
+    def __init__(self, filename, resolution=32, num_workers=None, subset_size="all"):
         with open(filename) as f:
-            self.names = f.read().splitlines()
+            all_names = f.read().splitlines()
+
+        # Select subset
+        if subset_size != "all":
+            subset_size = int(subset_size)
+            if subset_size > len(all_names):
+                raise ValueError(f"Requested {subset_size} matrices, but only {len(all_names)} available.")
+            self.names = all_names[:subset_size]
+        else:
+            self.names = all_names
 
         self.resolution = resolution
         self.standardize = self.compute_standardization()
@@ -69,7 +78,7 @@ class SparseMatrixDataset(torch.utils.data.Dataset):
 
     def compute_standardization(self):
         stats = {"rows": [], "cols": [], "nnzs": []}
-        with open("/home/chamika2/waco-extend/train.txt") as f:
+        with open("/home/chamika2/waco-extend/autoencoder.txt") as f:
             for filename in f.read().splitlines():
                 csr = np.fromfile("/home/chamika2/waco-extend/dataset/" + filename + ".csr", count=3, dtype='<i4')
                 stats["rows"].append(csr[0])
