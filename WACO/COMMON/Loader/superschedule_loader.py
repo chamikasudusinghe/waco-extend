@@ -10,12 +10,7 @@ class SuperScheduleDataset(torch.utils.data.Dataset):
         if mode not in ['spmm', 'sddmm']:
             raise ValueError("mode must be 'spmm' or 'sddmm'")
         
-        waco_prefix = os.getenv("WACO_HOME")
-        if waco_prefix is None:
-            print("Err : environment variable WACO_HOME is not defined")
-            return
-        
-        with open(f"./TrainingData/CollectedData/{mode}/{name}.txt") as f:
+        with open(f"/home/chamika2/waco-extend/dataset/{mode}/{name}.txt") as f:
             lines = [line.split() for line in f.read().splitlines()]
 
         split_ = [1 << p for p in range(17)]
@@ -93,7 +88,7 @@ class TrainingScheduleDataset(torch.utils.data.Dataset):
             names = f.read().splitlines()
 
         for name in names:
-            with open(f"./TrainingData/CollectedData/{name}.txt") as f:
+            with open(f"/home/chamika2/waco-extend/dataset/{mode}/{name}.txt") as f:
                 lines = [line.split() for line in f.read().splitlines()]
 
             for line in lines:

@@ -23,7 +23,7 @@ if __name__ == "__main__":
     
     net = ResNet14(in_channels=1, out_channels=1, D=2) # D : 2D Tensor
     net = net.to(device)
-    #net.load_state_dict(torch.load('./resnet.pth'))
+    net.load_state_dict(torch.load("scnn_weights.pth"))
   
     criterion = nn.MarginRankingLoss(margin=1)
     optimizer = Adam(net.parameters(), lr=1e-4)    
