@@ -10,13 +10,28 @@ import hnswlib
 import time
 import os
 import sys
+import numpy as np
+import random
+
+def set_seed(seed):
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+    random.seed(seed)
 
 if __name__ == "__main__":
+    set_seed(42)
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', type=str, required=True, choices=['spmm', 'sddmm'], help="Choose mode: 'spmm' or 'sddmm'")
     parser.add_argument('--input', type=str, default="/home/chamika2/waco-extend/total.txt", help="Path to schedule list file")
-    parser.add_argument('--output', type=str, default="/home/chamika2/waco-extend/hnswlib/WACO_COSTMODEL", help="Output directory")
+    parser.add_argument('--weights', type=str, default="/home/chamika2/waco-extend/hnswlib/WACO_COSTMODEL", help="Output directory")
     parser.add_argument('--weights-prefix', type=str, default="weight", help="Prefix for saved weight files")
+    parser.add_argument('--resnet-path', type=str, default="resnet.pth", help="Path to the pretrained ResNet weights (.pth file)")
+    parser.add_argument('--output', type=str, default="/home/chamika2/waco-extend/hnswlib/WACO_COSTMODEL", help="Output directory")
     args = parser.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -26,14 +41,14 @@ if __name__ == "__main__":
 
     net = ResNet14(in_channels=1, out_channels=1, D=2)
     net = net.to(device)
-    net.load_state_dict(torch.load('resnet.pth'))
+    net.load_state_dict(torch.load(args.resnet_path))
     net.eval()
 
-    os.makedirs(args.output, exist_ok=True)
+    os.makedirs(args.weights, exist_ok=True)
 
     for i, layer in enumerate([net.final[0], net.final[2], net.final[4]]):
-        np.savetxt(os.path.join(args.output, f"{args.weights_prefix}{i}.txt"), layer.weight.detach().cpu().numpy().flatten(), fmt='%.6f')
-        np.savetxt(os.path.join(args.output, f"bias{i}.txt"), layer.bias.detach().cpu().numpy().flatten(), fmt='%.6f')
+        np.savetxt(os.path.join(args.weights, f"{args.weights_prefix}{i}.txt"), layer.weight.detach().cpu().numpy().flatten(), fmt='%.6f')
+        np.savetxt(os.path.join(args.weights, f"bias{i}.txt"), layer.bias.detach().cpu().numpy().flatten(), fmt='%.6f')
 
     start = time.time()
     names = []
@@ -57,6 +72,6 @@ if __name__ == "__main__":
     p.add_items(embeddings, np.arange(num_elements))
     print("Generate HNSW Index Time:", time.time() - start)
 
-    index_path = os.path.join(f"hnsw_schedule_{args.mode}.bin")
+    index_path = os.path.join(args.output, f"hnsw_schedule_{args.mode}.bin")
     p.save_index(index_path)
     print(f"Saved HNSW index to: {index_path}")

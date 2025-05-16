@@ -3,6 +3,20 @@ import subprocess
 import csv
 import argparse
 import re
+import math
+import numpy as np
+import random
+import torch
+
+def set_seed(seed):
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+    random.seed(seed)
 
 def parse_output_file(filepath):
     best_schedule = None
@@ -30,11 +44,15 @@ def parse_output_file(filepath):
 
     return best_schedule, best_time, fixed_csr_time
 
-def run_topk_evaluation(topk_dir, csr_dir, binary_path, mode, output_dir):
+def run_topk_evaluation(topk_dir, csr_dir, binary_path, mode, output_dir, max_matrices=None):
     results = []
     os.makedirs(output_dir, exist_ok=True)
 
     topk_files = sorted(f for f in os.listdir(topk_dir) if f.endswith(".txt"))
+    
+    if max_matrices is not None:
+        topk_files = topk_files[:max_matrices]
+        print("Testing only for ", len(topk_files), " matrices.")
 
     for fname in topk_files:
         matrix_name = fname[:-4]
@@ -71,8 +89,23 @@ def save_results_to_csv(results, output_csv):
         writer.writerows(results)
     print(f"[✓] Saved results to {output_csv}")
 
+def compute_geomean_speedup(results):
+    speedups = []
+    for row in results:
+        _, _, _, waco_time, fixed_time = row
+        if waco_time > 0:
+            speedup = fixed_time / waco_time
+            speedups.append(speedup)
+
+    if not speedups:
+        return None
+
+    log_sum = sum(math.log(s) for s in speedups)
+    geomean = math.exp(log_sum / len(speedups))
+    return geomean
+
 if __name__ == "__main__":
-    # Argument parser: only mode is required
+    set_seed(42)
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', required=True, choices=['spmm', 'sddmm'], help="Program type to evaluate")
     parser.add_argument('--topk-dir', help="Directory containing top-k schedule .txt files")
@@ -80,12 +113,11 @@ if __name__ == "__main__":
     parser.add_argument('--binary', help="Path to the executable binary")
     parser.add_argument('--output-dir', help="Where to save raw execution outputs")
     parser.add_argument('--output-csv', help="Path to save final results CSV")
+    parser.add_argument('--max-matrices', type=int, default=None, help="Maximum number of matrices to evaluate")
     args = parser.parse_args()
 
-    # Root path
     ROOT = "/home/chamika2/waco-extend"
 
-    # Dynamic defaults based on mode
     mode = args.mode.lower()
     default_topk_dir = f"{ROOT}/WACO/COMMON/topk/{mode}"
     default_csr_dir = f"{ROOT}/dataset"
@@ -99,6 +131,14 @@ if __name__ == "__main__":
         binary_path=args.binary or default_binary,
         mode=mode,
         output_dir=args.output_dir or default_output_dir,
+        max_matrices=args.max_matrices,
     )
 
     save_results_to_csv(results, args.output_csv or default_output_csv)
+
+    # geomean speedup
+    geomean = compute_geomean_speedup(results)
+    if geomean is not None:
+        print(f"\n[✓] Geometric Mean Speedup over Fixed CSR: {geomean:.3f}×")
+    else:
+        print("\n[!] Geomean could not be computed — no valid results.")
