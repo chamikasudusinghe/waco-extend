@@ -46,6 +46,7 @@ for epoch in range(100):  # Allow more epochs for early stopping to work
 
     avg_loss = total_loss / len(dataloader)
     print(f"Epoch {epoch + 1}: Total Loss = {avg_loss:.6f}")
+    torch.save(net.state_dict(), "scnn_weights_epoch.pth")
 
     # Early stopping check
     if avg_loss < best_loss:
