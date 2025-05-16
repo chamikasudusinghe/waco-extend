@@ -28,13 +28,13 @@ if __name__ == "__main__":
     criterion = nn.MarginRankingLoss(margin=1)
     optimizer = Adam(net.parameters(), lr=1e-4)    
     
-    SparseMatrix_Dataset = SparseMatrixDataset('./TrainingData/train.txt')
+    SparseMatrix_Dataset = SparseMatrixDataset('/home/chamika2/waco-extend/train.txt')
     train_SparseMatrix = torch.utils.data.DataLoader(SparseMatrix_Dataset, batch_size=1, shuffle=True, num_workers=0, collate_fn=collate_fn)
 
-    SparseMatrix_Dataset_Valid = SparseMatrixDataset('./TrainingData/validation.txt')
+    SparseMatrix_Dataset_Valid = SparseMatrixDataset('/home/chamika2/waco-extend/validation.txt')
     valid_SparseMatrix = torch.utils.data.DataLoader(SparseMatrix_Dataset_Valid, batch_size=1, shuffle=True, num_workers=0, collate_fn=collate_fn)
 
-    for epoch in range(80) :
+    for epoch in range(10) :
         net.train()
         train_loss = 0
         train_loss_cnt = 0 
