@@ -15,7 +15,7 @@ git clone https://github.com/nullplay/Workload-Aware-Co-Optimization.git
 cd Workload-Aware-Co-Optimization
 export WACO_HOME=`pwd`
 ```  
-#### 1. If you want to train the cost model from scratch or use the [pre-trained](https://github.com/nullplay/Workload-Aware-Co-Optimization/edit/main/README.md#pretrained-model) model, you need a system that has a GPU with [PyTorch](https://pytorch.org/get-started/locally/) and [MinkowskiEngine](https://github.com/NVIDIA/MinkowskiEngine) installed.
+#### 1. If you want to train the cost model from scratch or use the [pre-trained](https://github.com/chamikasudusinghe/waco-extend/) model, you need a system that has a GPU with [PyTorch](https://pytorch.org/get-started/locally/) and [MinkowskiEngine](https://github.com/NVIDIA/MinkowskiEngine) installed.
 
 - Please follow the instructions in https://github.com/NVIDIA/MinkowskiEngine#requirements to install dependencies needed.  
 #### 2. Install hnswlib with a Python binding
@@ -38,8 +38,7 @@ make icc # 'make gcc' if you use gcc
 ```
 
 ## How to use
-This repository includes WACO for SpMV, SpMM, and SDDMM. While this README focuses on co-optimizing SpMM, you can easily apply these steps to SpMV and SDDMM as well.
-Basically, WACO is consisted of four stages and you can walk through each stage by following instructions. 
+This repository includes WACO-Extended for SpMM, and SDDMM. While this README focuses on co-optimizing SpMM, you can easily apply these steps to SpMV and SDDMM as well. Basically, WACO is consisted of four stages and you can walk through each stage by following instructions. 
 
 **1. Generate a training dataset.**
 ```
