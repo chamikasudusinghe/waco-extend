@@ -6,9 +6,25 @@ This repository includes an artifact for ["WACO: Learning workload-aware co-opti
 ## Requirement
 You can compile a generated code from TACO with `gcc` with OpenMP but we ***highly recommend*** to use Intel C++ Compiler Classic (`icc`, `icpc`) to compile a generated kernel from TACO for better performance.
 
+```
+conda create -n waco python=3.8 -y
+conda activate waco
+conda install python=3.8 pytorch==1.13.0 torchvision==0.14.0 torchaudio==0.13.0 pytorch-cuda=11.6 -c pytorch -c nvidia -y
+conda install cudatoolkit=11.6 -c nvidia -y
+conda install tqdm pandas matplotlib -y
+conda install -c conda-forge gcc=11.4.0 cxx-compiler cmake -y
+conda install openblas-devel -c anaconda -y
+pip install scikit-learn==1.0
+conda install setuptools -y
+pip install setuptools==59.5.0 -y
+conda install libcusolver-dev=11.6 -c nvidia -y
+rm -rf ~/.cache/torch_extensions/*
+pip install -U git+https://github.com/NVIDIA/MinkowskiEngine   --no-deps   --install-option="--blas_include_dirs=${CONDA_PREFIX}/include"   --install-option="--blas=openblas"
+```  
+
 You can download from https://www.intel.com/content/www/us/en/developer/tools/oneapi/dpc-compiler.html#gs.fyw7ne . It is important to install **Intel C++ Compiler Classic (`icc` and `icpc`)**, not an OneAPI compiler.
 
-## Installation
+## Installation and Usage
 #### 0. clone the repo and set `WACO_HOME` as working directory.
 ```
 git clone https://github.com/chamikasudusinghe/waco-extend.git
@@ -36,9 +52,83 @@ make -j8
 cd $WACO_HOME/code_generator
 make icc # 'make gcc' if you use gcc
 ```
+#### 5. Download the dataset (matrices and collected data points)
+```
+[Dataset](https://github.com/tensor-compiler/taco](https://drive.google.com/drive/folders/1ov1BAeXGOt5JmxplxKQev6yMYjZUl-IR?usp=drive_link)
+```
+#### 6. Train the auto-encoder
+```
+cd $WACO_HOME/WACO/COMMON
+python train_autoencoder.py
+```
+#### 6. Train the model
+```
+cd $WACO_HOME/WACO/COMMON
+python -u train.py --weights $WACO_HOME/WACO/COMMON/scnn_weights_best_100.pth
+```
+#### 6. Build hnswindex (e.g,: spmm)
+```
+cd $WACO_HOME/WACO/COMMON
+python build_hnswindex.py --mode spmm --input /home/chamika2/waco_results/all/total.txt --output /home/chamika2/waco_results/all/common --resnet-path /home/chamika2/waco_results/all/common/best_resnet.pth
+```
+#### 7. Do topk search (e.g,: spmm)
+```
+cd $WACO_HOME/WACO/COMMON
+python topk_search.py --mode spmm --hnsw-dir /home/chamika2/waco_results/all/common/ --test-file /home/chamika2/waco_results/all/test.txt --schedule-file /home/chamika2/waco_results/all/total.txt --resnet-path /home/chamika2/waco_results/all/common/best_resnet.pth --output-dir /home/chamika2/waco_results/all/topk
+```
+#### 8. Evaluate the selected topk schedules (e.g,: spmm). This will produce the geomean speedups at the end of execution
+```
+cd $WACO_HOME/WACO/COMMON
+ python eval.py --mode spmm --topk-dir /home/chamika2/waco_results/all/common/topk/spmm --output-dir /home/chamika2/waco_results/all/common/times/spmm --output-csv /home/chamika2/waco_results/all/common/spmm_results.csv --max-matrices 300
+```
 
-## How to use
+## Generating Trading Data Individually (additional instructions)
+
 This repository includes WACO-Extended for SpMM, and SDDMM. While this README focuses on co-optimizing SpMM, you can easily apply these steps to SpMV and SDDMM as well. Basically, WACO is consisted of four stages and you can walk through each stage by following instructions. 
+
+## Directory Structure
+
+```
+├──waco-extend
+    ├── code_generator
+    ├── dataset (this has all the matrices)
+          ├── spmm
+          ├── sddmm
+    ├── WACO
+        ├── SDDMM
+        │   ├── TrainingData
+        │   │   ├── CollectedData 
+        │   │   ├── test.txt
+        │   │   ├── total.txt
+        │   │   ├── train.txt
+        │   │   └── validation.txt
+        │   ├── hnsw_schedule.bin
+        │   ├── resnet.pth
+        │   └── topk 
+        ├── SpMM
+        │   ├── TrainingData
+        │   │   ├── CollectedData 
+        │   │   ├── test.txt
+        │   │   ├── total.txt
+        │   │   ├── train.txt
+        │   │   └── validation.txt
+        │   ├── hnsw_schedule.bin
+        │   ├── resnet.pth
+        │   └── topk 
+        ├── COMMON
+        │   ├── TrainingData
+        │   │   ├── CollectedData 
+        │   │   ├── test.txt
+        │   │   ├── total.txt
+        │   │   ├── train.txt
+        │   │   └── validation.txt
+        │   ├── hnsw_schedule.bin
+        │   ├── resnet.pth
+        │   └── topk 
+   
+```
+
+`dataset` directory includes sparse matrices from [SuiteSparse Matrix Collection](https://sparse.tamu.edu/) in which a file format are converted into our custom .csr format. 
 
 **1. Generate a training dataset.**
 ```
@@ -90,50 +180,6 @@ cd $WACO_HOME/code_generator
 ./spmm ../dataset/"YourSparseMatrixName".csr $WACO_HOME/WACO/SpMM/topk/"YourSparseMatrixName".txt
 (Example) ./spmm ../dataset/bcsstk38.csr $WACO_HOME/WACO/SpMM/topk/bcsstk38.txt
 ```
-
-## Pretrained model
-Collecting runtimes and training a cost model need a lot of time (approximately 1-2 weeks). For a quick evaluation, we provide pre-trained cost models which are trained on ***Intel(R) Xeon(R) CPU E5-2680 v3 with an icc-compiled*** TACO kernel. 
-
-Top-20 Schedules, collected Runtimes, built KNNGraphs, and pre-trained cost models that we've used in the paper can be found at : 
-https://www.dropbox.com/s/mos4jtma4jmqkje/pretrained.zip?dl=0
-
-
-```
-pretrained
-├── SDDMM
-│   ├── TrainingData
-│   │   ├── CollectedData  [19262 entries]
-│   │   ├── test.txt
-│   │   ├── total.txt
-│   │   ├── train.txt
-│   │   └── validation.txt
-│   ├── hnsw_schedule.bin
-│   ├── resnet.pth
-│   └── topk  [975 entries]
-├── SpMM
-│   ├── TrainingData
-│   │   ├── CollectedData  [21481 entries]
-│   │   ├── test.txt
-│   │   ├── total.txt
-│   │   ├── train.txt
-│   │   └── validation.txt
-│   ├── hnsw_schedule.bin
-│   ├── resnet.pth
-│   └── topk  [975 entries]
-├── SpMV
-│   ├── TrainingData
-│   │   ├── CollectedData  [21481 entries]
-│   │   ├── test.txt
-│   │   ├── total.txt
-│   │   ├── train.txt
-│   │   └── validation.txt
-│   ├── hnsw_schedule.bin
-│   ├── resnet.pth
-│   └── topk  [975 entries]
-└── dataset  [975 entries]
-```
-
-`dataset` directory includes 975 sparse matrices from [SuiteSparse Matrix Collection](https://sparse.tamu.edu/) in which a file format are converted into our custom .csr format. 
 
 To test a pretrained cost model for SpMM,
 ```
