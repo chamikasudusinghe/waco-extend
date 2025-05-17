@@ -1,4 +1,4 @@
-# WACO
+# WACO Extended (Unified Framework)
 Workload-Aware Co-Optimization for a sparse tensor program.
 
 This repository includes an artifact for ["WACO: Learning workload-aware co-optimization of the format and schedule of a sparse tensor program"](https://dl.acm.org/doi/10.1145/3575693.3575742)
