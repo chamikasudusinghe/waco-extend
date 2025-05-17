@@ -12,6 +12,7 @@ class ResNetBase(nn.Module):
     def __init__(self, in_channels, out_channels, D=3):
         nn.Module.__init__(self)
         self.D = D
+        self.reconstruction_size = 32
 
         self.network_initialization(in_channels, out_channels, D)
         self.weight_initialization()
@@ -88,20 +89,26 @@ class ResNetBase(nn.Module):
         self.formatk1 = nn.Embedding(2, 32)
         self.formatk0 = nn.Embedding(2, 32)
         self.parchunk = nn.Embedding(9, 32) # For OpenTuner
+        self.protype = nn.Embedding(2, 32)
         self.order = nn.Linear(36, 32) #6x6 Permutation
 
         self.schedule_embedding = nn.Sequential(
-            nn.Linear(32*9,128),
+            nn.Linear(32*10,128),
             nn.ReLU(),
             nn.Linear(128,128),
         )
         
-        self.decoder = nn.Sequential(
+        self.decoder_matrix = nn.Sequential(
+            nn.Linear(128, 512),
+            nn.ReLU(),
+            nn.Linear(512, self.reconstruction_size * self.reconstruction_size),
+            nn.Sigmoid(),
+        )
+
+        self.decoder_shape = nn.Sequential(
             nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Linear(32, 3),  # Reconstructs [num_rows, num_cols, nnz]
+            nn.Linear(64, 3),
         )
         
         # Final Layer
@@ -175,7 +182,8 @@ class ResNetBase(nn.Module):
         #pidx = self.paridx(y[:, 43].long())
         #pnum = self.parnum(y[:, 44].long())
         pchk = self.parchunk(y[:, 45].long())
-        y = torch.cat((isplit,ksplit,jsplit,order,i1f,i0f,k1f,k0f,pchk), dim=1)
+        ptype = self.protype(y[:, 46].long())
+        y = torch.cat((isplit,ksplit,jsplit,order,i1f,i0f,k1f,k0f,pchk,ptype), dim=1)
         y = self.schedule_embedding(y)
 
         #y = F.normalize(y)
@@ -196,9 +204,11 @@ class ResNetBase(nn.Module):
         return xy
     
     def forward_autoencoder(self, x1: ME.SparseTensor, x2):
-        embedding = self.embed_sparse_matrix(x1, x2)  # shape: (B, 128)
-        reconstructed_shape = self.decoder(embedding)  # shape: (B, 3)
-        return embedding, reconstructed_shape
+        embedding = self.embed_sparse_matrix(x1, x2)
+        matrix_flat = self.decoder_matrix(embedding)
+        matrix = matrix_flat.view(-1, 1, self.reconstruction_size, self.reconstruction_size)
+        shape_vector = self.decoder_shape(embedding)
+        return embedding, matrix, shape_vector
 
 
 class ResNet14(ResNetBase):

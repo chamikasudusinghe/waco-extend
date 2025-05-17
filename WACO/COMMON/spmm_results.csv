@@ -1,0 +1,6 @@
+matrix_name,program_type,best_schedule,waco_time_ms,fixed_csr_time_ms
+144,spmm,2 2 64 i1 k1 j1 i0 k0 j0 0 1 0 1 i1 48 8 = 19.9999 ms,19.9999,17.2287
+192bit,spmm,1 2 128 i1 k1 j1 i0 k0 j0 0 1 0 1 i1 48 2 = 9.04148 ms,9.04148,8.87026
+208bit,spmm,2 2 64 i1 k1 j1 i0 k0 j0 0 1 0 1 i1 48 8 = 9.35135 ms,9.35135,9.00797
+2D_27628_bjtcai,spmm,2 2 64 i1 k1 j1 i0 k0 j0 0 1 0 1 i1 48 8 = 9.07094 ms,9.07094,9.05264
+2cubes_sphere,spmm,2 2 64 i1 k1 j1 i0 k0 j0 0 1 0 1 i1 48 8 = 13.238 ms,13.238,11.9413

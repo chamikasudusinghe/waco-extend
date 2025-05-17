@@ -7,15 +7,28 @@ from Loader.sparsematrix_loader import SparseMatrixDataset, collate_fn
 import MinkowskiEngine as ME
 import hnswlib
 import time
+import numpy as np
+import random
+
+def set_seed(seed):
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    np.random.seed(seed)
+    random.seed(seed)
 
 if __name__ == "__main__":
+  set_seed(42)
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   schedules = TrainingScheduleDataset("./TrainingData/total.txt")
   schedule_loader = torch.utils.data.DataLoader(schedules, batch_size=128, shuffle=False, num_workers=0)
   
   net = ResNet14(in_channels=1, out_channels=1, D=2) # D : 2D Tensor
   net = net.to(device)
-  net.load_state_dict(torch.load('resnet.pth'))
+  net.load_state_dict(torch.load('/home/chamika2/waco-extend/WACO/SDDMM/best_resnet.pth'))
   net.eval()
   
   names = []
@@ -38,7 +51,7 @@ if __name__ == "__main__":
     shapes = shapes.to(device)
 
     query = net.embed_sparse_matrix(SparseMatrix, shapes)
-    labels, distances = p.knn_query(query.cpu().detach().numpy()[0], k=20)
+    labels, distances = p.knn_query(query.cpu().detach().numpy()[0], k=10)
     
     with open("./topk/"+mtx_names[0]+".txt", 'w') as f :
       f.write('\n'.join(list(np.array(names)[labels[0]])))
