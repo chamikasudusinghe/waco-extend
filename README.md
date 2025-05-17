@@ -11,8 +11,8 @@ You can download from https://www.intel.com/content/www/us/en/developer/tools/on
 ## Installation
 #### 0. clone the repo and set `WACO_HOME` as working directory.
 ```
-git clone https://github.com/nullplay/Workload-Aware-Co-Optimization.git
-cd Workload-Aware-Co-Optimization
+git clone https://github.com/chamikasudusinghe/waco-extend.git
+cd waco-extend
 export WACO_HOME=`pwd`
 ```  
 #### 1. If you want to train the cost model from scratch or use the [pre-trained](https://github.com/chamikasudusinghe/waco-extend/) model, you need a system that has a GPU with [PyTorch](https://pytorch.org/get-started/locally/) and [MinkowskiEngine](https://github.com/NVIDIA/MinkowskiEngine) installed.
