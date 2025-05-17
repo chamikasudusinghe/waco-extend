@@ -54,7 +54,7 @@ make icc # 'make gcc' if you use gcc
 ```
 #### 5. Download the dataset (matrices and collected data points)
 ```
-[Dataset](https://github.com/tensor-compiler/taco](https://drive.google.com/drive/folders/1ov1BAeXGOt5JmxplxKQev6yMYjZUl-IR?usp=drive_link)
+[Dataset](https://drive.google.com/drive/folders/1ov1BAeXGOt5JmxplxKQev6yMYjZUl-IR?usp=drive_link)
 ```
 #### 6. Train the auto-encoder
 ```
