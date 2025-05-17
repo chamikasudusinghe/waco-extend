@@ -64,22 +64,27 @@ python train_autoencoder.py
 #### 6. Train the model
 ```
 cd $WACO_HOME/WACO/COMMON
-python -u train.py --weights $WACO_HOME/WACO/COMMON/scnn_weights_best_100.pth
+python -u train.py --weights $WACO_HOME/WACO/COMMON/scnn_weights_best_1809.pth
 ```
-#### 6. Build hnswindex (e.g,: spmm)
-```
-cd $WACO_HOME/WACO/COMMON
-python build_hnswindex.py --mode spmm --input /home/chamika2/waco_results/all/total.txt --output /home/chamika2/waco_results/all/common --resnet-path /home/chamika2/waco_results/all/common/best_resnet.pth
-```
-#### 7. Do topk search (e.g,: spmm)
+#### 7. Build hnswindex (e.g,: spmm)
 ```
 cd $WACO_HOME/WACO/COMMON
-python topk_search.py --mode spmm --hnsw-dir /home/chamika2/waco_results/all/common/ --test-file /home/chamika2/waco_results/all/test.txt --schedule-file /home/chamika2/waco_results/all/total.txt --resnet-path /home/chamika2/waco_results/all/common/best_resnet.pth --output-dir /home/chamika2/waco_results/all/topk
+python build_hnswindex.py --mode spmm --input /home/chamika2/experimental_data/total.txt --output /home/chamika2/experimental_data/ --resnet-path /home/chamika2/waco_results//best_resnet.pth
 ```
-#### 8. Evaluate the selected topk schedules (e.g,: spmm). This will produce the geomean speedups at the end of execution
+#### 8. Do topk search (e.g,: spmm)
 ```
 cd $WACO_HOME/WACO/COMMON
- python eval.py --mode spmm --topk-dir /home/chamika2/waco_results/all/common/topk/spmm --output-dir /home/chamika2/waco_results/all/common/times/spmm --output-csv /home/chamika2/waco_results/all/common/spmm_results.csv --max-matrices 300
+python topk_search.py --mode spmm --hnsw-dir /home/chamika2/experimental_data/ --test-file /home/chamika2/experimental_data/test.txt --schedule-file /home/chamika2/experimental_data/total.txt --resnet-path /home/chamika2/experimental_data/best_resnet.pth --output-dir /home/chamika2/experimental_data/topk
+```
+#### 8. Use the experimental_data folder if it is difficult to run above (these files are within the previously downloaded folder)
+```
+Download the zip file and extract it to a preferred location. When running eval.py, make sure to give the correct paths. To run eval.py, both taco and code_generator need to be built at least.
+```
+
+#### 9. Evaluate the selected topk schedules (e.g,: spmm). This will produce the geomean speedups at the end of execution
+```
+cd $WACO_HOME/WACO/COMMON
+ python eval.py --mode spmm --topk-dir /home/chamika2/experimental_data/topk/spmm --output-dir /home/chamika2/experimental_data/times/spmm --output-csv /home/chamika2/experimental_data/spmm_results.csv --max-matrices 300
 ```
 
 ## Directory Structure
