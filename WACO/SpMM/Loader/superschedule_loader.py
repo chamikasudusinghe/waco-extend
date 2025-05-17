@@ -11,7 +11,7 @@ class SuperScheduleDataset(torch.utils.data.Dataset):
       if waco_prefix is None : 
         print("Err : environment variable WACO_HOME is not defined")
         return 
-      with open("./TrainingData/CollectedData/"+name+".txt") as f:
+      with open("/home/chamika2/waco-extend/dataset/spmm/"+name+".txt") as f:
         lines = f.read().splitlines()
         lines = [line.split() for line in lines]
 
@@ -95,7 +95,7 @@ class TrainingScheduleDataset(torch.utils.data.Dataset):
         uniqstr = set()
       
       for name in names : 
-        with open("./TrainingData/CollectedData/"+name+".txt") as f:
+        with open("/home/chamika2/waco-extend/dataset/spmm/"+name+".txt") as f:
           lines = f.read().splitlines()
           lines = [line.split() for line in lines]
         

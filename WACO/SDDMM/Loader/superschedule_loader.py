@@ -6,7 +6,7 @@ from itertools import permutations, product
 
 class SuperScheduleDataset(torch.utils.data.Dataset):
     def __init__(self, name):
-      with open("./TrainingData/CollectedData/"+name+".txt") as f:
+      with open("/home/chamika2/waco-extend/dataset/sddmm/"+name+".txt") as f:
         lines = f.read().splitlines()
         lines = [line.split() for line in lines]
 
@@ -89,7 +89,7 @@ class TrainingScheduleDataset(torch.utils.data.Dataset):
         uniqstr = set()
       
       for name in names : 
-        with open("./TrainingData/CollectedData/"+name+".txt") as f:
+        with open("/home/chamika2/waco-extend/dataset/sddmm/"+name+".txt") as f:
           lines = f.read().splitlines()
           lines = [line.split() for line in lines]
         
