@@ -82,10 +82,6 @@ cd $WACO_HOME/WACO/COMMON
  python eval.py --mode spmm --topk-dir /home/chamika2/waco_results/all/common/topk/spmm --output-dir /home/chamika2/waco_results/all/common/times/spmm --output-csv /home/chamika2/waco_results/all/common/spmm_results.csv --max-matrices 300
 ```
 
-## Generating Trading Data Individually (additional instructions)
-
-This repository includes WACO-Extended for SpMM, and SDDMM. While this README focuses on co-optimizing SpMM, you can easily apply these steps to SpMV and SDDMM as well. Basically, WACO is consisted of four stages and you can walk through each stage by following instructions. 
-
 ## Directory Structure
 
 ```
@@ -129,6 +125,10 @@ This repository includes WACO-Extended for SpMM, and SDDMM. While this README fo
 ```
 
 `dataset` directory includes sparse matrices from [SuiteSparse Matrix Collection](https://sparse.tamu.edu/) in which a file format are converted into our custom .csr format. 
+
+## Generating Trading Data Individually (additional instructions)
+
+This repository includes WACO-Extended for SpMM, and SDDMM. While this README focuses on co-optimizing SpMM, you can easily apply these steps to SpMV and SDDMM as well. Basically, WACO is consisted of four stages and you can walk through each stage by following instructions. 
 
 **1. Generate a training dataset.**
 ```
